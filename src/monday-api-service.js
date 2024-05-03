@@ -55,7 +55,7 @@ export const assignFileToColumn = async (
   }
 };
 
-const extractKeywordFromFileName = (fileName) => {
+export const extractKeywordFromFileName = (fileName) => {
   // Split the file name by underscore to get an array of parts
   const parts = fileName.split('_');
   // The keyword is the first part of the file name

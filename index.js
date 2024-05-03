@@ -1,6 +1,5 @@
 import express from 'express';
 import { Logger } from '@mondaycom/apps-sdk';
-import { transformText } from './src/transformation-service.js';
 import { authorizeRequest } from './src/middleware.js';
 import {
   getFileColumnName,
