@@ -3,3 +3,5 @@ import { Logger } from '@mondaycom/apps-sdk';
 
 const logTag = 'Middleware';
 const logger = new Logger(logTag);
+
+// insert new code here
