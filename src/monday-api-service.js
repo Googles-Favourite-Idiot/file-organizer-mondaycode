@@ -5,25 +5,31 @@ const logTag = 'Middleware';
 const logger = new Logger(logTag);
 
 // insert new code here
-export const getFileColumnName = async (token, itemId, columnId) => {
+const getFileColumnName = async (token, itemId, fileColumnId) => {
   try {
     const mondayClient = initMondayClient();
     mondayClient.setApiVersion('2024-01');
     mondayClient.setToken(token);
 
-    const query = `query($itemId: [ID!], $columnId: [String!]) {
-      items (ids: $itemId) {
-        column_values(ids:$columnId) {
+    const query = `query($itemId: [ID!], $columnId: [File!]) {
+      items(ids: $itemId) {
+        column_values(ids: $columnId) {
+          id
           value
         }
       }
     }`;
-    const variables = { columnId, itemId };
+    const variables = { itemId, columnId: [fileColumnId] };
 
     const response = await mondayClient.api(query, { variables });
-    return response.data.items[0].column_values[0].value;
+
+    // Extract file name from the response
+    const fileName = response.data.items[0].column_values[0].value;
+
+    return fileName;
   } catch (err) {
     logger.error(err);
+    return null;
   }
 };
 
@@ -31,18 +37,19 @@ export const assignFileToColumn = async (
   token,
   itemId,
   fileColumnId,
-  keywordColumnId
+  keywordColumnId,
+  keyword
 ) => {
   try {
     const fileName = await getFileColumnName(token, itemId, fileColumnId);
-    const keyword = extractKeywordFromFileName(fileName);
-    const columnValue = keyword ? { files: [fileName] } : null;
+    const fileUrl = await getFileUrl(token, itemId, fileColumnId);
+    const columnValue = { files: [{ name: fileName, url: fileUrl }] };
 
     const mondayClient = initMondayClient();
     mondayClient.setApiVersion('2024-01');
     mondayClient.setToken(token);
 
-    const query = `mutation($itemId: Int!, $columnId: String!, $value: JSON!) {
+    const query = `mutation($itemId: Int!, $columnId: File!, $value: JSON!) {
       change_column_value(item_id: $itemId, column_id: $columnId, value: $value) {
         id
       }

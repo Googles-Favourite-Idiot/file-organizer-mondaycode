@@ -50,20 +50,21 @@ app.post('/monday/execute_action', authorizeRequest, async (req, res) => {
       transformationType,
     } = inputFields;
 
-    const fileName = await getFileColumnName(
+    // Get the file name from the source column
+    const fileName = await getColumnValue(
       shortLivedToken,
       itemId,
       sourceColumnId
     );
-    const keyword = extractKeywordFromFileName(fileName);
-    const columnValue = keyword ? { files: [fileName] } : null;
+    if (!fileName) {
+      return res.status(200).send({});
+    }
 
-    await assignFileToColumn(
-      shortLivedToken,
-      itemId,
-      targetColumnId,
-      keywordColumnId
-    );
+    // Extract keyword from file name
+    const keyword = extractKeywordFromFileName(fileName);
+
+    // Move file to another column based on keyword
+    await assignFileToColumn(shortLivedToken, itemId, targetColumnId, keyword);
 
     return res.status(200).send({});
   } catch (err) {
@@ -77,7 +78,7 @@ app.post(
   authorizeRequest,
   async (req, res) => {
     const TRANSFORMATION_TYPES = [
-      { title: 'to upper case', value: TO_UPPER_CASE },
+      { title: 'test this string', value: TO_UPPER_CASE },
       { title: 'to lower case', value: TO_LOWER_CASE },
     ];
     try {
