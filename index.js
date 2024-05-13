@@ -2,7 +2,7 @@ import express from 'express';
 import { Logger } from '@mondaycom/apps-sdk';
 import { authorizeRequest } from './src/middleware.js';
 import {
-  getFileColumnName,
+  getFileColumn,
   assignFileToColumn,
   extractKeywordFromFileName,
 } from './src/monday-api-service.js';
@@ -14,8 +14,6 @@ dotenv.config();
 const logTag = 'ExpressServer';
 const PORT = 'PORT';
 const SERVICE_TAG_URL = 'SERVICE_TAG_URL';
-const TO_UPPER_CASE = 'TO_UPPER_CASE';
-const TO_LOWER_CASE = 'TO_LOWER_CASE';
 
 const logger = new Logger(logTag);
 const currentPort = getSecret(PORT); // Port must be 8080 to work with monday code
@@ -42,16 +40,10 @@ app.post('/monday/execute_action', authorizeRequest, async (req, res) => {
 
   try {
     const { inputFields } = payload;
-    const {
-      boardId,
-      itemId,
-      sourceColumnId,
-      targetColumnId,
-      transformationType,
-    } = inputFields;
+    const { boardId, itemId, sourceColumnId, targetColumnId } = inputFields;
 
     // Get the file name from the source column
-    const fileName = await getColumnValue(
+    const fileName = await getFileColumn(
       shortLivedToken,
       itemId,
       sourceColumnId
@@ -64,7 +56,13 @@ app.post('/monday/execute_action', authorizeRequest, async (req, res) => {
     const keyword = extractKeywordFromFileName(fileName);
 
     // Move file to another column based on keyword
-    await assignFileToColumn(shortLivedToken, itemId, targetColumnId, keyword);
+    await assignFileToColumn(
+      shortLivedToken,
+      boardId,
+      itemId,
+      targetColumnId,
+      keyword
+    );
 
     return res.status(200).send({});
   } catch (err) {
@@ -73,22 +71,13 @@ app.post('/monday/execute_action', authorizeRequest, async (req, res) => {
   }
 });
 
-app.post(
-  '/monday/get_remote_list_options',
-  authorizeRequest,
-  async (req, res) => {
-    const TRANSFORMATION_TYPES = [
-      { title: 'test this string', value: TO_UPPER_CASE },
-      { title: 'to lower case', value: TO_LOWER_CASE },
-    ];
-    try {
-      return res.status(200).send(TRANSFORMATION_TYPES);
-    } catch (err) {
-      logger.error(err);
-      return res.status(500).send({ message: 'internal server error' });
-    }
-  }
-);
+app.post('/subscribe', authorizeRequest, async (req, res) => {
+  res.status(200).send({});
+});
+
+app.post('/unsubscribe', authorizeRequest, async (req, res) => {
+  res.status(200).send({});
+});
 
 app.post('/produce', async (req, res) => {
   try {

@@ -5,7 +5,7 @@ const logTag = 'Middleware';
 const logger = new Logger(logTag);
 
 // insert new code here
-const getFileColumnName = async (token, itemId, fileColumnId) => {
+export const getFileColumn = async (token, itemId, fileColumnId) => {
   try {
     const mondayClient = initMondayClient();
     mondayClient.setApiVersion('2024-01');
@@ -35,15 +35,14 @@ const getFileColumnName = async (token, itemId, fileColumnId) => {
 
 export const assignFileToColumn = async (
   token,
+  boardId,
   itemId,
-  fileColumnId,
-  keywordColumnId,
+  columnId,
   keyword
 ) => {
   try {
-    const fileName = await getFileColumnName(token, itemId, fileColumnId);
-    const fileUrl = await getFileUrl(token, itemId, fileColumnId);
-    const columnValue = { files: [{ name: fileName, url: fileUrl }] };
+    const fileName = awa(token, itemId, columnId);
+    const columnValue = { files: [{ name: fileName }] };
 
     const mondayClient = initMondayClient();
     mondayClient.setApiVersion('2024-01');
@@ -54,7 +53,7 @@ export const assignFileToColumn = async (
         id
       }
     }`;
-    const variables = { itemId, columnId: keywordColumnId, value: columnValue };
+    const variables = { itemId, columnId: keyword, value: columnValue };
 
     await mondayClient.api(query, { variables });
   } catch (err) {
